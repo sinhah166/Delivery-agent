@@ -1,0 +1,15 @@
+{
+  "name": "railquick-delivery-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RailQuick Delivery Agent - Intelligent Last-Mile Delivery Operating System",
+  "scripts": {
+    "dev:frontend": "cd apps/frontend && npm run dev",
+    "dev:backend": "cd apps/backend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cd apps/frontend && npm run build",
+    "build:backend": "cd apps/backend && npm run build",
+    "seed": "cd apps/backend && npm run seed",
+    "test": "cd apps/backend && npm test"
+  }
+}

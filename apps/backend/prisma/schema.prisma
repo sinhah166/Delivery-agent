@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id               String   @id @default(uuid())
+  name             String
+  phone            String   @unique
+  email            String   @unique
+  password         String
+  status           String   @default("OFFLINE")
+  vehicleType      String   @default("BIKE")
+  currentLatitude  Float    @default(28.6139)
+  currentLongitude Float    @default(77.2090)
+  currentLoad      Int      @default(0)
+  maxCapacity      Int      @default(5)
+  rating           Float    @default(4.5)
+  totalDeliveries  Int      @default(0)
+  onTimeDeliveries Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  deliveries         Delivery[]
+  deliveryExceptions DeliveryException[]
+}
+
+model Vendor {
+  id                String   @id @default(uuid())
+  name              String
+  phone             String
+  address           String
+  latitude          Float
+  longitude         Float
+  status            String   @default("OPEN")
+  averagePickupTime Int      @default(5)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Customer {
+  id                   String   @id @default(uuid())
+  name                 String
+  phone                String
+  address              String
+  latitude             Float
+  longitude            Float
+  deliveryInstructions String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id               String   @id @default(uuid())
+  orderNumber      String   @unique
+  customerId       String
+  vendorId         String
+  priority         String   @default("NORMAL")
+  status           String   @default("CREATED")
+  pickupDeadline   DateTime
+  deliveryDeadline DateTime
+  
+  // Railway Specific Fields
+  pnr              String?
+  trainNumber      String?
+  trainName        String?
+  coach            String?
+  seat             String?
+  stationCode      String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  vendor     Vendor      @relation(fields: [vendorId], references: [id])
+  items      OrderItem[]
+  deliveries Delivery[]
+}
+
+model OrderItem {
+  id       String @id @default(uuid())
+  orderId  String
+  name     String
+  quantity Int
+  sku      String
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model Delivery {
+  id                    String    @id @default(uuid())
+  orderId               String
+  agentId               String
+  status                String    @default("ASSIGNED")
+  assignedAt            DateTime  @default(now())
+  acceptedAt            DateTime?
+  pickupStartedAt       DateTime?
+  pickedUpAt            DateTime?
+  deliveryStartedAt     DateTime?
+  arrivedAt             DateTime?
+  deliveredAt           DateTime?
+  estimatedDeliveryTime Int?
+  actualDeliveryTime    Int?
+  riskScore             Int       @default(0)
+  riskLevel             String    @default("SAFE")
+  distanceRemaining     Float?
+  otp                   String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  order  Order           @relation(fields: [orderId], references: [id])
+  agent  Agent           @relation(fields: [agentId], references: [id])
+  events DeliveryEvent[]
+  exceptions DeliveryException[]
+}
+
+model DeliveryEvent {
+  id         String   @id @default(uuid())
+  deliveryId String
+  eventType  String
+  latitude   Float?
+  longitude  Float?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+}
+
+model DeliveryException {
+  id                String   @id @default(uuid())
+  deliveryId        String
+  agentId           String
+  type              String
+  category          String
+  severity          String
+  latitude          Float?
+  longitude         Float?
+  recommendedAction String
+  status            String   @default("OPEN")
+  createdAt         DateTime @default(now())
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+  agent    Agent    @relation(fields: [agentId], references: [id])
+}
